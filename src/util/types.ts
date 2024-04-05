@@ -8,7 +8,7 @@ export type Movie = {
     url: string | null;
     previewUrl: string | null;
   } | null;
-  countries: { name: string }[];
+  countries: { name: string }[] | null;
 };
 
 export type MovieQueryResponse = {

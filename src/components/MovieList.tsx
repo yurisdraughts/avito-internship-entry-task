@@ -11,7 +11,7 @@ function MovieList({
   loading: boolean;
 }) {
   const movieList = data.docs.map((movie: Movie, i: number) => {
-    const { name, names, poster, year, countries, ageRating } = movie;
+    const { id, name, names, poster, year, countries, ageRating } = movie;
     const title = name ? name : names[0] ? names[0].name : "";
 
     return (
@@ -23,16 +23,16 @@ function MovieList({
             width={240}
             style={{ aspectRatio: "2 / 3" }}
             preview={false}
-            key={movie.id}
+            key={id}
           />
         )}
-        <Title level={3}>{title}</Title>
+        {title && <Title level={3}>{title}</Title>}
         {year !== null && (
           <Paragraph>
             <Text strong>Год производства:</Text> {year}
           </Paragraph>
         )}
-        {countries.length !== 0 && (
+        {countries && (
           <Paragraph>
             <Text strong>Страна:</Text>{" "}
             {countries.map((country) => country.name).join(", ")}
