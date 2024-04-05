@@ -10,9 +10,3 @@ export type Movie = {
   } | null;
   countries: { name: string }[] | null;
 };
-
-export type MovieQueryResponse = {
-  docs: Movie[];
-  total: number;
-  pages: number;
-};

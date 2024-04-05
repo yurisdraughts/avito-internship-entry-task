@@ -1,16 +1,20 @@
 import { Skeleton, Image, Typography } from "antd";
-import type { Movie, MovieQueryResponse } from "../util/types";
+import type { Movie } from "../util/types";
 
 const { Title, Paragraph, Text, Link } = Typography;
 
 function MovieList({
-  data,
+  movies,
+  from,
+  to,
   loading,
 }: {
-  data: MovieQueryResponse;
+  movies: Movie[];
+  from: number;
+  to: number;
   loading: boolean;
 }) {
-  const movieList = data.docs.map((movie: Movie, i: number) => {
+  const movieList = movies.slice(from, to).map((movie: Movie, i: number) => {
     const { id, name, names, poster, year, countries, ageRating } = movie;
     const title = name ? name : names[0] ? names[0].name : "";
 

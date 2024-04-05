@@ -1,62 +1,102 @@
-import { useState } from "react";
-import { Pagination, Input } from "antd";
-import type { SearchProps } from "antd/es/input";
-import type { MovieQueryResponse } from "./util/types";
-import MovieFetcher from "./components/MovieFetcher";
+import { useEffect, useState } from "react";
+import { Pagination, Input, Typography, Space, Flex, InputNumber } from "antd";
+import type { Movie } from "./util/types";
 import MovieList from "./components/MovieList";
 
-const token = process.env.TOKEN;
-const defaultCurrent = 1;
-const defaultPageSize = 10;
 const { Search } = Input;
+const { Text } = Typography;
+
+const token = process.env.TOKEN;
+const host = "https://api.kinopoisk.dev/v1.4/movie";
 
 function App() {
-  const [data, setData] = useState<MovieQueryResponse | null>(null);
+  const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(defaultCurrent);
-  const [limit, setLimit] = useState(defaultPageSize);
-  const [name, setName] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [downloadPage, setDownloadPage] = useState(1);
+  const [query, setQuery] = useState("");
 
-  const onPageChange = (newPage: number, newLimit: number) => {
-    setPage(newPage);
-    setLimit(newLimit);
+  const onPageChange = (pageNumber: number, _: number) => {
+    setCurrentPage(() => pageNumber);
   };
 
-  const onSearch: SearchProps["onSearch"] = (value) => {
-    setName(encodeURIComponent(value));
+  const onPageSizeChange = (_: number, newSize: number) => {
+    setPageSize(() => newSize);
   };
+
+  const onSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setMovies(() => []);
+    setCurrentPage(() => 1);
+    setDownloadPage(() => 1);
+    setQuery(() => encodeURIComponent(event.target.value));
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    if (movies.length <= pageSize * currentPage) {
+      const signal = controller.signal;
+      setLoading(true);
+
+      const request = new Request(
+        `${host}/search?page=${downloadPage}&limit=50${
+          query ? `&query=${query}` : ""
+        }`,
+        {
+          method: "GET",
+          headers: { accept: "application/json", "X-API-KEY": token },
+          signal,
+        }
+      );
+
+      fetch(request)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+
+          return response.json();
+        })
+        .then((data) => {
+          setLoading(false);
+          setMovies((movies) => movies.concat(data.docs));
+          setDownloadPage((counter) => counter + 1);
+        })
+        .catch((err) => console.error(err));
+    }
+
+    return () => {
+      controller.abort();
+    };
+  }, [movies, currentPage, pageSize, query]);
 
   return (
-    <MovieFetcher
-      page={page}
-      limit={limit}
-      token={token}
-      name={name}
-      setLoading={setLoading}
-      setData={setData}
-    >
+    <Space direction="vertical" size="middle" style={{ display: "flex" }}>
       <Search
         size="large"
         placeholder="Поиск фильмов и сериалов по названию"
         allowClear
-        onSearch={onSearch}
-        enterButton="Поиск"
+        onChange={onSearch}
+      />
+      <MovieList
+        movies={movies}
+        from={pageSize * (currentPage - 1)}
+        to={pageSize * currentPage}
         loading={loading}
       />
-      {data && <MovieList data={data} loading={loading} />}
-      {data && (
-        <Pagination
-          current={page}
-          defaultCurrent={defaultCurrent}
-          defaultPageSize={defaultPageSize}
-          pageSizeOptions={[10, 20, 50]}
-          total={data.total}
-          showSizeChanger
-          hideOnSinglePage
-          onChange={onPageChange}
-        ></Pagination>
-      )}
-    </MovieFetcher>
+      <Pagination
+        current={currentPage}
+        pageSize={pageSize}
+        defaultCurrent={1}
+        defaultPageSize={10}
+        pageSizeOptions={[10, 20, 50]}
+        total={movies.length}
+        showSizeChanger
+        onChange={onPageChange}
+        onShowSizeChange={onPageSizeChange}
+      ></Pagination>
+    </Space>
   );
 }
 
