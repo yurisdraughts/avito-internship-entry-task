@@ -17,16 +17,12 @@ module.exports = {
     rules: [
       {
         test: /\.(ts|tsx)$/i,
-        use: ["babel-loader"],
+        use: ["babel-loader", "ts-loader"],
         exclude: /node_modules/,
       },
       {
         test: /\.scss$/i,
-        use: [
-          "style-loader",
-          "css-loader",
-          "sass-loader",
-        ],
+        use: ["style-loader", "css-loader", "sass-loader"],
       },
     ],
   },
@@ -36,9 +32,9 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({ template: "./src/index.html" }),
-    new webpack.EnvironmentPlugin({ TOKEN: null }),
+    new webpack.EnvironmentPlugin(["TOKEN"]),
   ],
   resolve: {
-    extensions: [".tsx", ".ts", ".jsx", "..."],
+    extensions: [".tsx", ".ts", "..."],
   },
 };
