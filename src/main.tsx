@@ -1,21 +1,17 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { ConfigProvider } from "antd";
-import ru from "antd/locale/ru_RU";
-import App from "./App";
-
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <App />,
-  },
-]);
+import { RouterProvider } from "react-router-dom";
+import "normalize.css";
+import "@mantine/core/styles.css";
+import { MantineProvider, ColorSchemeScript } from "@mantine/core";
+import "./styles/main.scss";
+import router from "./util/router";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <ConfigProvider locale={ru}>
+    <ColorSchemeScript />
+    <MantineProvider>
       <RouterProvider router={router} />
-    </ConfigProvider>
+    </MantineProvider>
   </React.StrictMode>
 );
