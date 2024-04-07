@@ -5,6 +5,9 @@ export type IdResponse = {
   rating: {
     kp: number;
   };
+  poster: {
+    url: string;
+  };
   persons: {
     photo: string;
     name: string;
@@ -31,12 +34,13 @@ export type SearchResponse = {
     name: string;
     year: number;
     countries: {
-      name: string[];
-    };
+      name: string;
+    }[];
     ageRating: number;
   }[];
   page: number;
   limit: number;
+  pages: number;
 };
 
 export type ReviewResponse = {
@@ -63,3 +67,8 @@ export type ImageResponse = {
 export type WithReviews<T> = T & { reviews: ReviewResponse["docs"] };
 export type WithImages<T> = T & { images: ImageResponse["docs"] };
 export type WithControllers<T> = T & { controllers: AbortController[] };
+
+export type SearchByName<T> = T & { search: string };
+export type SearchWithFilters<T> = T & {
+  filters: { year: string; country: string; ageRating: string };
+};

@@ -1,16 +1,16 @@
-import "../styles/Root.scss";
 import { Outlet } from "react-router-dom";
+import { AppShell, Container } from "@mantine/core";
 
 export default function Root() {
   return (
-    <>
-      <header className="header">header</header>
-      <main className="main">
-        <div className="container">
+    <AppShell>
+      <AppShell.Header pos="static" h={70}></AppShell.Header>
+      <AppShell.Main className="main" my={20}>
+        <Container>
           <Outlet />
-        </div>
-      </main>
-      <footer className="footer">footer</footer>
-    </>
+        </Container>
+      </AppShell.Main>
+      <AppShell.Footer pos="static" h={70}></AppShell.Footer>
+    </AppShell>
   );
 }

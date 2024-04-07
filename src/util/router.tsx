@@ -14,7 +14,7 @@ export default createBrowserRouter([
         loader: searchLoader,
       },
       {
-        path: "page/:page/:limit?",
+        path: ":page/:limit?",
         element: <Search />,
         loader: searchLoader,
       },

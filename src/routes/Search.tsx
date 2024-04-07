@@ -2,119 +2,74 @@ import {
   Link,
   useLoaderData,
   useLocation,
-  useNavigate,
   useNavigation,
 } from "react-router-dom";
 import type { Params } from "react-router-dom";
-import { Pagination, Select, Skeleton } from "@mantine/core";
-import { useEffect, useState } from "react";
+import { Card, Skeleton, Stack, Text } from "@mantine/core";
+import { useEffect } from "react";
 import customFetch from "../util/customFetch";
-import type { SearchResponse, WithControllers } from "../util/types";
+import type {
+  SearchByName,
+  SearchResponse,
+  SearchWithFilters,
+  WithControllers,
+} from "../util/types";
+import SearchPagination from "../components/SearchPagination";
+import SearchInputs from "../components/SearchInputs";
 
-const createTo = (page: number | string, limit: number | string) => {
-  return { pathname: `/page/${page}${limit !== 10 ? `/${limit}` : ""}` };
-};
-
-type LoaderData = WithControllers<Partial<SearchResponse>>;
+type LoaderData = WithControllers<
+  Partial<SearchWithFilters<SearchByName<SearchResponse>>>
+>;
 
 export default function Search() {
   const data = useLoaderData() as LoaderData;
 
-  if (!data.docs) {
-    return <>Не удалось загрузить результаты поиска.</>;
-  }
-
   const navigation = useNavigation();
-  const navigate = useNavigate();
+  const isLoading = navigation.state === "loading";
+  const isAnotherPage = navigation.location?.state?.anotherPage;
   const location = useLocation();
-
-  const [paginationTotal, setPaginationTotal] = useState(10);
-  const [activePage, setActivePage] = useState(data.page);
-  const [pageSize, setPageSize] = useState(data.limit);
-
-  const onPageChange = (value: number) => {
-    setActivePage(value);
-
-    if (paginationTotal - value < 5) {
-      setPaginationTotal((pt) => pt + 10);
-    } else if (paginationTotal - value > 15) {
-      setPaginationTotal(() => Math.ceil(value / 10) * 10);
-    }
-  };
-
-  const onPageSizeChange = (value: string | null) => {
-    const newPageSize = parseInt(value);
-    const newActivePage = Math.ceil((activePage * pageSize) / newPageSize);
-
-    setPageSize(newPageSize);
-    setActivePage(newActivePage);
-
-    navigate(createTo(newActivePage, newPageSize));
-  };
-
-  const setPaginationProps = (page: number) => {
-    return {
-      component: Link,
-      to: createTo(page, pageSize),
-    };
-  };
 
   useEffect(() => {
     return data.controllers.forEach((c) => c.abort());
   }, []);
 
   return (
-    <>
-      {data.docs.map((m, i) => (
-        <Skeleton visible={navigation.state === "loading"} key={i}>
-          <Link
-            to={`/movie/${m.id}`}
-            state={{ backToSearch: location.pathname + location.search }}
-            style={{ display: "block" }}
-          >
-            {m.name}
-          </Link>
+    <Stack>
+      <SearchInputs search={data.search} filters={data.filters} />
+      {!data.docs && <Text>Не удалось загрузить результаты поиска.</Text>}
+      {data.docs && (
+        <Skeleton visible={isLoading && !isAnotherPage}>
+          <Stack>
+            {data.docs.map((m, i) => (
+              <Skeleton key={i} visible={isLoading && isAnotherPage}>
+                <Card withBorder>
+                  <Link
+                    to={`/movie/${m.id}`}
+                    state={{
+                      backToSearch: location.pathname + location.search,
+                    }}
+                    style={{ display: "block" }}
+                  >
+                    {m.name} {m.year} {m.ageRating}{" "}
+                    {m.countries.map((c) => c.name).join("/")}
+                  </Link>
+                </Card>
+              </Skeleton>
+            ))}
+            <SearchPagination page={data.page} limit={data.limit} />
+          </Stack>
         </Skeleton>
-      ))}
-      <Select
-        checkIconPosition="right"
-        data={["10", "20", "50"]}
-        defaultValue={`${pageSize}`}
-        label="Число фильмов на странице:"
-        onChange={onPageSizeChange}
-      />
-      <Pagination
-        color="#f50"
-        getControlProps={(control) => {
-          switch (control) {
-            case "first":
-              return setPaginationProps(1);
-            case "last":
-              return setPaginationProps(paginationTotal);
-            case "next":
-              return setPaginationProps(activePage + 1);
-            case "previous":
-              return setPaginationProps(activePage - 1);
-            default:
-              return {};
-          }
-        }}
-        getItemProps={(page) => setPaginationProps(page)}
-        onChange={onPageChange}
-        radius="md"
-        siblings={2}
-        total={paginationTotal}
-        value={activePage}
-        withEdges
-      />
-    </>
+      )}
+    </Stack>
   );
 }
 
 export async function loader({
   params,
+  request,
 }: {
   params: Params<"page" | "limit">;
+  request: Request;
 }): Promise<LoaderData> {
   let page = parseInt(params.page);
 
@@ -131,15 +86,46 @@ export async function loader({
   } else {
     limit = 20;
   }
-  const { data, controller } = await customFetch<LoaderData>(
-    `movie?page=${page}&limit=${limit}`
-  );
+
+  const searchParams = new URL(request.url).searchParams;
+  const name = searchParams.get("n");
+  const year = searchParams.get("y");
+  const country = searchParams.get("c");
+  const ageRating = searchParams.get("a");
+
+  let data: LoaderData, controller: AbortController;
+
+  if (year || country || ageRating) {
+    const yearComponent = year ? `&year=${year}` : "";
+    const countryComponent = country
+      ? `&countries.name=${encodeURIComponent(country)}`
+      : "";
+    const ageRatingComponent = ageRating ? `&ageRating=${ageRating}` : "";
+
+    ({ data, controller } = await customFetch<LoaderData>(
+      `movie?page=${page}&limit=${limit}${yearComponent}${ageRatingComponent}${countryComponent}`
+    ));
+  } else if (name) {
+    ({ data, controller } = await customFetch<LoaderData>(
+      `movie/search?page=${page}&limit=${limit}&query=${name}`
+    ));
+  } else {
+    ({ data, controller } = await customFetch<LoaderData>(
+      `movie?page=${page}&limit=${limit}`
+    ));
+  }
 
   if (!data) {
     return { controllers: [controller] };
   }
 
   data.controllers = [controller];
+
+  if (year || country || ageRating) {
+    data.filters = { year, country, ageRating };
+  } else if (name) {
+    data.search = name;
+  }
 
   return data;
 }

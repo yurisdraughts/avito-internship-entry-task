@@ -10,59 +10,110 @@ import type {
 } from "../util/types";
 import customFetch from "../util/customFetch";
 import { useEffect } from "react";
+import {
+  Button,
+  Card,
+  Group,
+  Image,
+  Rating,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 
 type LoaderData = WithControllers<Partial<WithImages<WithReviews<IdResponse>>>>;
 
 export default function Movie() {
-  const movie = useLoaderData() as LoaderData;
+  const {
+    id,
+    poster,
+    name,
+    description,
+    rating,
+    persons,
+    seasonsInfo,
+    reviews,
+    images,
+    similarMovies,
+    controllers,
+  } = useLoaderData() as LoaderData;
 
-  if (!movie.id) {
-    return <>Не удалось загрузить информацию о фильме.</>;
-  }
+  const actors = persons
+    ?.filter((p) => p.enProfession === "actor")
+    ?.map((p) => p.name);
 
   const {
     state: { backToSearch },
   } = useLocation();
 
   useEffect(() => {
-    return movie.controllers.forEach((c) => c.abort());
+    return controllers.forEach((c) => c.abort());
   }, []);
 
+  if (!id) {
+    return <>Не удалось загрузить информацию о фильме.</>;
+  }
+
   return (
-    <>
-      <div className="movie__data movie__data_name">{movie.name}</div>
-      <div className="movie__data movie__data_description">
-        {movie.description}
-      </div>
-      <div className="movie__data movie__data_rating">{movie.rating.kp}</div>
-      <div className="movie__data movie__data_persons">
-        {movie.persons
-          .filter((p) => p.enProfession === "actor")
-          .map((p) => p.name)
-          .join(", ")}
-      </div>
-      <div className="movie__data movie__data_seasons">
-        {movie.seasonsInfo
+    <Card withBorder radius="md">
+      <Card.Section>
+        <Group align="start" grow wrap="nowrap">
+          {poster && poster.url && <Image src={poster.url} />}
+          <Stack p="md">
+            {name && <Title order={1}>{name}</Title>}
+            {description && (
+              <Stack>
+                <Title order={2}>Описание</Title>
+                <Text>{description}</Text>
+              </Stack>
+            )}
+            {rating && rating.kp && (
+              <Stack>
+                <Title order={2}>Рейтинг</Title>
+                <Group>
+                  <Rating
+                    fractions={5}
+                    readOnly
+                    title={`${rating.kp}`}
+                    value={rating.kp / 2}
+                  />
+                  <Text>{rating.kp.toFixed(2)}</Text>
+                </Group>
+              </Stack>
+            )}
+            <Stack>
+              <Title order={2}>В ролях</Title>
+              <Text>{actors}</Text>
+            </Stack>
+          </Stack>
+        </Group>
+      </Card.Section>
+      <Text>
+        {seasonsInfo
           .map((s) => {
             return `Номер сезона: ${s.number}, число эпизодов: ${s.episodesCount}`;
           })
           .join("; ")}
-      </div>
-      <div className="movie__data movie__data_reviews">
-        {movie.reviews.map((r) => {
+      </Text>
+      <Text>
+        {reviews.map((r) => {
           return `${r.title}\n${r.type}\n${r.date}\n${r.author}\n${r.review}`;
         })}
-      </div>
-      <div className="movie__data movie__data_posters">
-        {movie.images.map((img, idx) => {
+      </Text>
+      <Text>
+        {images.map((img, idx) => {
           return <img src={img.previewUrl} key={idx} />;
         })}
-      </div>
-      <div className="movie__data movie__data_similar-movies">
-        {movie.similarMovies.map((sm) => sm.name).join(", ")}
-      </div>
-      {backToSearch && <Link to={backToSearch}>Вернуться к поиску</Link>}
-    </>
+      </Text>
+      <Text className="movie__data movie__data_similar-movies">
+        {similarMovies.map((sm) => sm.name)}
+      </Text>
+      {backToSearch && (
+        <Button component={Link} to={backToSearch}>
+          Вернуться к поиску
+        </Button>
+      )}
+    </Card>
   );
 }
 
@@ -79,7 +130,7 @@ export async function loader({
     return { controllers: [controller] };
   }
 
-  data.controllers = [];
+  data.controllers = [controller];
 
   const { data: reviews, controller: reviewsController } =
     await customFetch<ReviewResponse>(`review?page=1&limit=10&movieId=${id}`);
