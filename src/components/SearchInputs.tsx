@@ -2,7 +2,9 @@ import { useNavigate } from "react-router-dom";
 import {
   Collapse,
   Group,
+  NumberInput,
   SegmentedControl,
+  Select,
   Stack,
   TextInput,
 } from "@mantine/core";
@@ -103,8 +105,16 @@ export default function SearchInputs({
     dispatch(e.target.value);
   };
 
-  const onFiltersInput = (e: ChangeEvent<HTMLInputElement>) => {
-    dispatch({ [e.target.dataset.field]: e.target.value });
+  const onCountryInput = (e: ChangeEvent<HTMLInputElement>) => {
+    dispatch({ country: e.target.value });
+  };
+
+  const onYearInput = (value: number | string) => {
+    dispatch({ year: String(value) });
+  };
+
+  const onAgeRatingSelect = (value: string | null) => {
+    dispatch({ ageRating: value });
   };
 
   useEffect(() => {
@@ -143,29 +153,34 @@ export default function SearchInputs({
       />
       <Collapse in={searchOpened}>
         <TextInput
-          placeholder="Название"
+          label="Название"
           onChange={onNameInput}
+          placeholder="Введите название"
           value={isSearch(state) ? state : ""}
         />
       </Collapse>
       <Collapse in={filtersOpened}>
         <Group grow>
-          <TextInput
-            placeholder="Год"
-            data-field="year"
-            onChange={onFiltersInput}
+          <NumberInput
+            allowDecimal={false}
+            hideControls
+            label="Год"
+            onChange={onYearInput}
+            placeholder="Введите год"
             value={isFilters(state) && state.year ? state.year : ""}
           />
           <TextInput
-            placeholder="Страна"
-            data-field="country"
-            onChange={onFiltersInput}
+            label="Страна"
+            onChange={onCountryInput}
+            placeholder="Введите страну"
             value={isFilters(state) && state.country ? state.country : ""}
           />
-          <TextInput
-            placeholder="Возрастной рейтинг"
-            data-field="ageRating"
-            onChange={onFiltersInput}
+          <Select
+            clearable
+            data={["0", "6", "12", "16", "18"].map((v) => v + "+")}
+            label="Возрастной рейтинг"
+            onChange={onAgeRatingSelect}
+            placeholder="Выберите возрастной рейтинг"
             value={isFilters(state) && state.ageRating ? state.ageRating : ""}
           />
         </Group>

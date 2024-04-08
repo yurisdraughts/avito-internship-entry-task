@@ -1,5 +1,19 @@
 import { Link, useLoaderData, useLocation } from "react-router-dom";
 import type { Params } from "react-router-dom";
+import { useEffect } from "react";
+import {
+  Button,
+  Card,
+  Flex,
+  Group,
+  Image,
+  Rating,
+  Stack,
+  Table,
+  Text,
+  Title,
+} from "@mantine/core";
+import { Carousel } from "@mantine/carousel";
 import type {
   IdResponse,
   ImageResponse,
@@ -9,17 +23,6 @@ import type {
   WithControllers,
 } from "../util/types";
 import customFetch from "../util/customFetch";
-import { useEffect } from "react";
-import {
-  Button,
-  Card,
-  Group,
-  Image,
-  Rating,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
 
 type LoaderData = WithControllers<Partial<WithImages<WithReviews<IdResponse>>>>;
 
@@ -47,7 +50,9 @@ export default function Movie() {
   } = useLocation();
 
   useEffect(() => {
-    return controllers.forEach((c) => c.abort());
+    return () => {
+      controllers.forEach((c) => c.abort());
+    };
   }, []);
 
   if (!id) {
@@ -58,7 +63,7 @@ export default function Movie() {
     <Card withBorder radius="md">
       <Card.Section>
         <Group align="start" grow wrap="nowrap">
-          {poster && poster.url && <Image src={poster.url} />}
+          {poster && poster.url && <Image mah={700} src={poster.url} />}
           <Stack p="md">
             {name && <Title order={1}>{name}</Title>}
             {description && (
@@ -67,7 +72,8 @@ export default function Movie() {
                 <Text>{description}</Text>
               </Stack>
             )}
-            {rating && rating.kp && (
+            {!description && <Text>Описание отсутствует</Text>}
+            {rating && !!rating.kp && (
               <Stack>
                 <Title order={2}>Рейтинг</Title>
                 <Group>
@@ -81,33 +87,74 @@ export default function Movie() {
                 </Group>
               </Stack>
             )}
-            <Stack>
-              <Title order={2}>В ролях</Title>
-              <Text>{actors}</Text>
-            </Stack>
+            {!rating && !rating.kp && <Text>Нет информации о  рейтинге</Text>}
+            {actors && !!actors.length && (
+              <Stack>
+                <Title order={2}>В ролях</Title>
+                <Text>{actors.join(", ")}</Text>
+              </Stack>
+            )}
+            {!actors && !actors.length && <Text>Нет информации об актёрах</Text>}
           </Stack>
         </Group>
       </Card.Section>
-      <Text>
-        {seasonsInfo
-          .map((s) => {
-            return `Номер сезона: ${s.number}, число эпизодов: ${s.episodesCount}`;
-          })
-          .join("; ")}
-      </Text>
-      <Text>
-        {reviews.map((r) => {
-          return `${r.title}\n${r.type}\n${r.date}\n${r.author}\n${r.review}`;
-        })}
-      </Text>
-      <Text>
-        {images.map((img, idx) => {
-          return <img src={img.previewUrl} key={idx} />;
-        })}
-      </Text>
-      <Text className="movie__data movie__data_similar-movies">
-        {similarMovies.map((sm) => sm.name)}
-      </Text>
+      {seasonsInfo && !!seasonsInfo.length && (
+        <>
+          <Title order={2}>Информация о сезонах</Title>
+          <Card.Section>
+            <Table striped withColumnBorders withRowBorders={false}>
+              <Table.Thead></Table.Thead>
+              <Table.Tr>
+                <Table.Th>Сезон</Table.Th>
+                <Table.Th>Число эпизодов</Table.Th>
+              </Table.Tr>
+              <Table.Tbody>
+                {seasonsInfo.map((s) => (
+                  <Table.Tr>
+                    <Table.Td>{++s.number}</Table.Td>
+                    <Table.Td>{s.episodesCount}</Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </Card.Section>
+        </>
+      )}
+      {images && !!images.length && (
+        <>
+          <Title order={2}>Галерея</Title>
+          <Card.Section>
+            <Carousel loop withIndicators>
+              {images.map((img, i) => {
+                return (
+                  <Carousel.Slide mah={500} key={i}>
+                    <Flex h="100%" justify="center" align="center">
+                      <Image mah="100%" m="auto" src={img.previewUrl} />
+                    </Flex>
+                  </Carousel.Slide>
+                );
+              })}
+            </Carousel>
+          </Card.Section>
+        </>
+      )}
+      {similarMovies && !!similarMovies.length && (
+        <>
+          <Title order={2}>Рекомендации</Title>
+          <Card.Section>
+            <Carousel loop withIndicators>
+              {similarMovies.map((sm, i) => (
+                <Carousel.Slide mah={300} key={i}>
+                  <Flex h="100%" justify="center" align="center">
+                    <Image mah="100%" m="auto" src={sm.poster.previewUrl} />
+                  </Flex>
+                  {sm.name}
+                </Carousel.Slide>
+              ))}
+            </Carousel>
+          </Card.Section>
+        </>
+      )}
       {backToSearch && (
         <Button component={Link} to={backToSearch}>
           Вернуться к поиску

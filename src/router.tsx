@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
-import Root from "../routes/Root";
-import Movie, { loader as movieLoader } from "../routes/Movie";
-import Search, { loader as searchLoader } from "../routes/Search";
+import Root from "./routes/Root";
+import Movie, { loader as movieLoader } from "./routes/Movie";
+import Search, { loader as searchLoader } from "./routes/Search";
 
 export default createBrowserRouter([
   {

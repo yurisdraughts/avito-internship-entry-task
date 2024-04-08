@@ -33,12 +33,17 @@ export type SearchResponse = {
     id: number;
     name: string;
     year: number;
+    poster: {
+      url: string;
+      previewUrl: string;
+    }
     countries: {
       name: string;
     }[];
     ageRating: number;
   }[];
   page: number;
+
   limit: number;
   pages: number;
 };

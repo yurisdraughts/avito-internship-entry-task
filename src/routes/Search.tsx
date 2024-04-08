@@ -5,7 +5,16 @@ import {
   useNavigation,
 } from "react-router-dom";
 import type { Params } from "react-router-dom";
-import { Card, Skeleton, Stack, Text } from "@mantine/core";
+import {
+  Card,
+  Grid,
+  Group,
+  Image,
+  Skeleton,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import { useEffect } from "react";
 import customFetch from "../util/customFetch";
 import type {
@@ -24,14 +33,16 @@ type LoaderData = WithControllers<
 export default function Search() {
   const data = useLoaderData() as LoaderData;
 
+  useEffect(() => {
+    return () => {
+      data.controllers.forEach((c) => c.abort());
+    };
+  }, []);
+
   const navigation = useNavigation();
   const isLoading = navigation.state === "loading";
   const isAnotherPage = navigation.location?.state?.anotherPage;
   const location = useLocation();
-
-  useEffect(() => {
-    return data.controllers.forEach((c) => c.abort());
-  }, []);
 
   return (
     <Stack>
@@ -40,23 +51,62 @@ export default function Search() {
       {data.docs && (
         <Skeleton visible={isLoading && !isAnotherPage}>
           <Stack>
-            {data.docs.map((m, i) => (
-              <Skeleton key={i} visible={isLoading && isAnotherPage}>
-                <Card withBorder>
-                  <Link
-                    to={`/movie/${m.id}`}
-                    state={{
-                      backToSearch: location.pathname + location.search,
-                    }}
-                    style={{ display: "block" }}
-                  >
-                    {m.name} {m.year} {m.ageRating}{" "}
-                    {m.countries.map((c) => c.name).join("/")}
-                  </Link>
+            {data.docs.map((m) => (
+              <Skeleton key={m.id} visible={isLoading && isAnotherPage}>
+                <Card
+                  component={Link}
+                  state={{
+                    backToSearch: location.pathname + location.search,
+                  }}
+                  td="none"
+                  to={`/movie/${m.id}`}
+                  withBorder
+                >
+                  <Card.Section>
+                    <Grid align="center">
+                      {m.poster && m.poster.previewUrl && (
+                        <Grid.Col span={3}>
+                          <Image src={m.poster.previewUrl} />
+                        </Grid.Col>
+                      )}
+                      <Grid.Col
+                        span={m.poster && m.poster.previewUrl ? 8 : 12}
+                        p="md"
+                      >
+                        <Title order={2}>{m.name}</Title>
+                        {m.year && (
+                          <Group align="center">
+                            <Title order={3}>Год</Title>
+                            <Text>{m.year}</Text>
+                          </Group>
+                        )}
+                        {m.countries && m.countries.length && (
+                          <Group align="center">
+                            <Title order={3}>Страна</Title>
+                            <Text>
+                              {m.countries.map((c) => c.name).join(", ")}
+                            </Text>
+                          </Group>
+                        )}
+                        {m.ageRating !== null && (
+                          <Group align="center">
+                            <Title order={3}>Возрастной рейтинг</Title>
+                            <Text>{m.ageRating}+</Text>
+                          </Group>
+                        )}
+                      </Grid.Col>
+                    </Grid>
+                  </Card.Section>
                 </Card>
               </Skeleton>
             ))}
-            <SearchPagination page={data.page} limit={data.limit} />
+            {data.pages && (
+              <SearchPagination
+                page={data.page}
+                limit={data.limit}
+                total={data.pages}
+              />
+            )}
           </Stack>
         </Skeleton>
       )}

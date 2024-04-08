@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Group, Pagination, Select } from "@mantine/core";
 import { useEventListener } from "@mantine/hooks";
@@ -6,13 +6,27 @@ import { useEventListener } from "@mantine/hooks";
 export default function SearchPagination({
   page,
   limit,
+  total,
 }: {
   page: number;
   limit: number;
+  total: number;
 }) {
-  const [paginationTotal, setPaginationTotal] = useState(10);
+  const [paginationTotal, setPaginationTotal] = useState(Math.min(10, total));
   const [activePage, setActivePage] = useState(page);
   const [pageSize, setPageSize] = useState(limit);
+
+  useEffect(() => {
+    setPaginationTotal(Math.min(10, total));
+  }, [total]);
+
+  useEffect(() => {
+    setActivePage(Math.min(page, total));
+  }, [page]);
+
+  useEffect(() => {
+    setPageSize(limit);
+  }, [limit]);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,7 +42,7 @@ export default function SearchPagination({
     setActivePage(value);
 
     if (paginationTotal - value < 5) {
-      setPaginationTotal((pt) => pt + 10);
+      setPaginationTotal((pt) => Math.min(pt + 10, total));
     } else if (paginationTotal - value > 15) {
       setPaginationTotal(() => Math.ceil(value / 10) * 10);
     }
@@ -36,9 +50,12 @@ export default function SearchPagination({
 
   const onPageSizeChange = (value: string | null) => {
     const newPageSize = !value ? 1 : parseInt(value);
-    const newActivePage = Math.ceil((activePage * pageSize) / newPageSize);
+    const newActivePage = Math.min(
+      Math.ceil((activePage * pageSize) / newPageSize),
+      total
+    );
     setPageSize(newPageSize);
-    setActivePage(newActivePage);
+    setActivePage(Math.min(newActivePage, paginationTotal));
 
     navigate(createTo(newActivePage, newPageSize));
   };
@@ -51,12 +68,13 @@ export default function SearchPagination({
     };
   };
 
-  const preventDefault = () =>
-    useEventListener("click", function (e) {
+  const preventDefault = () => {
+    return useEventListener("click", function (e) {
       if (this.hasAttribute("disabled")) {
         e.preventDefault();
       }
     });
+  };
 
   return (
     <Group justify="space-between">
@@ -84,15 +102,17 @@ export default function SearchPagination({
         siblings={2}
         total={paginationTotal}
         value={activePage}
-        withEdges
+        withEdges={paginationTotal > 5}
+        withControls={paginationTotal > 5}
       />
       <Select
         checkIconPosition="right"
         data={["10", "20", "50"]}
         defaultValue={`${pageSize}`}
         inputWrapperOrder={["input", "label"]}
-        label="на стр."
+        label="результатов на стр."
         onChange={onPageSizeChange}
+        w={`${"результатов на стр.".length}ch`}
       />
     </Group>
   );
