@@ -1,29 +1,37 @@
-import { useNavigate } from "react-router-dom";
+import { ChangeEvent, useEffect, useReducer } from "react";
+import {
+  useLocation,
+  useNavigate,
+  useNavigation,
+  useSearchParams,
+} from "react-router-dom";
 import {
   Collapse,
-  Group,
+  Grid,
   NumberInput,
   SegmentedControl,
   Select,
   Stack,
   TextInput,
+  useMantineTheme,
 } from "@mantine/core";
-import { ChangeEvent, useEffect, useReducer } from "react";
-import { useDisclosure } from "@mantine/hooks";
+import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
+import * as segmentedControlClasses from "../styles/SearchInputs/SegmentedControl.module.css";
+import useMaxWidth from "../util/useMaxWidth";
 
-type Search = string;
-function isSearch(value: unknown): value is Search {
+type SearchInput = string;
+function isSearch(value: unknown): value is SearchInput {
   return typeof value === "string";
 }
 
-type Filters = { year?: string; country?: string; ageRating?: string };
-function isFilters(value: unknown): value is Filters {
+type FiltersInput = { year?: string; country?: string; ageRating?: string };
+function isFilters(value: unknown): value is FiltersInput {
   return typeof value === "object" && value !== null;
 }
 
-type State = null | Search | Filters;
+type SearchState = null | SearchInput | FiltersInput;
 
-const reducer = (state: State, action: State) => {
+const reducer = (state: SearchState, action: SearchState) => {
   if (
     typeof state === "object" &&
     state !== null &&
@@ -36,21 +44,28 @@ const reducer = (state: State, action: State) => {
   return action;
 };
 
-export default function SearchInputs({
-  search,
-  filters,
-}: {
-  search: Search | null;
-  filters: Filters | null;
-}) {
-  const navigate = useNavigate();
+export default function SearchInputs() {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const search = searchParams.get("n");
+  const year = searchParams.get("y");
+  const country = searchParams.get("c");
+  const ageRating = searchParams.get("a");
+  const filters =
+    year || country || ageRating ? { year, country, ageRating } : null;
+
   const [state, dispatch] = useReducer(reducer, filters ? filters : search);
+  const [debounced] = useDebouncedValue(state, 1000);
+
   const [searchOpened, { toggle: toggleSearch }] = useDisclosure(
     isSearch(state)
   );
   const [filtersOpened, { toggle: toggleFilters }] = useDisclosure(
     isFilters(state)
   );
+
+  const theme = useMantineTheme();
+  const isXs = useMaxWidth("xs");
 
   const onSegmentChange = (value: string) => {
     switch (value) {
@@ -114,33 +129,34 @@ export default function SearchInputs({
   };
 
   const onAgeRatingSelect = (value: string | null) => {
-    dispatch({ ageRating: value });
+    const number = parseInt(value);
+    dispatch({ ageRating: isNaN(number) ? "" : String(number) });
   };
 
   useEffect(() => {
-    if (isSearch(state) && state !== "") {
-      navigate({ pathname: "/", search: `n=${encodeURIComponent(state)}` });
-    } else if (isFilters(state)) {
-      const yearComponent = state.year ? `y=${state.year}` : "";
-      const countryComponent = state.country
-        ? `c=${encodeURIComponent(state.country)}`
-        : "";
-      const ageRatingComponent = state.ageRating ? `a=${state.ageRating}` : "";
-
-      navigate({
-        pathname: "/",
-        search: [yearComponent, countryComponent, ageRatingComponent]
-          .filter((c) => c !== "")
-          .join("&"),
-      });
+    if (isSearch(debounced) && debounced !== "") {
+      setSearchParams({ n: debounced });
+    } else if (isFilters(debounced)) {
+      setSearchParams(
+        Object.fromEntries(
+          Object.entries(debounced)
+            .filter(([_, v]) => Boolean(v))
+            .map(([k, v]) => [k[0], v])
+        )
+      );
     } else {
-      navigate({ pathname: "/" });
+      setSearchParams({});
     }
-  }, [state]);
+  }, [debounced]);
 
   return (
     <Stack>
       <SegmentedControl
+        color={theme.primaryColor}
+        size={isXs ? "xs" : "lg"}
+        classNames={{
+          root: segmentedControlClasses.root,
+        }}
         data={[
           { value: "all", label: "Все фильмы" },
           { value: "filters", label: "Фильтры" },
@@ -153,6 +169,7 @@ export default function SearchInputs({
       />
       <Collapse in={searchOpened}>
         <TextInput
+          size="md"
           label="Название"
           onChange={onNameInput}
           placeholder="Введите название"
@@ -160,30 +177,42 @@ export default function SearchInputs({
         />
       </Collapse>
       <Collapse in={filtersOpened}>
-        <Group grow>
-          <NumberInput
-            allowDecimal={false}
-            hideControls
-            label="Год"
-            onChange={onYearInput}
-            placeholder="Введите год"
-            value={isFilters(state) && state.year ? state.year : ""}
-          />
-          <TextInput
-            label="Страна"
-            onChange={onCountryInput}
-            placeholder="Введите страну"
-            value={isFilters(state) && state.country ? state.country : ""}
-          />
-          <Select
-            clearable
-            data={["0", "6", "12", "16", "18"].map((v) => v + "+")}
-            label="Возрастной рейтинг"
-            onChange={onAgeRatingSelect}
-            placeholder="Выберите возрастной рейтинг"
-            value={isFilters(state) && state.ageRating ? state.ageRating : ""}
-          />
-        </Group>
+        <Grid columns={6} grow>
+          <Grid.Col span={{ base: 6, sm: 3, md: 2 }}>
+            <NumberInput
+              size="md"
+              allowDecimal={false}
+              hideControls
+              label="Год"
+              min={1874}
+              onChange={onYearInput}
+              placeholder="Введите год"
+              value={isFilters(state) && state.year ? state.year : ""}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 6, sm: 3, md: 2 }}>
+            <TextInput
+              size="md"
+              label="Страна"
+              onChange={onCountryInput}
+              placeholder="Введите страну"
+              value={isFilters(state) && state.country ? state.country : ""}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 6, md: 2 }}>
+            <Select
+              size="md"
+              clearable
+              data={["0", "6", "12", "16", "18"].map((v) => v + "+")}
+              label="Возрастной рейтинг"
+              onChange={onAgeRatingSelect}
+              placeholder="Выберите возрастной рейтинг"
+              value={
+                isFilters(state) && state.ageRating ? state.ageRating + "+" : ""
+              }
+            />
+          </Grid.Col>
+        </Grid>
       </Collapse>
     </Stack>
   );

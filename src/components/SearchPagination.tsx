@@ -1,41 +1,69 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Group, Pagination, Select } from "@mantine/core";
+import { Flex, Pagination, Select } from "@mantine/core";
 import { useEventListener } from "@mantine/hooks";
+import * as selectClasses from "../styles/SearchPagination/Select.module.css";
+import useMaxWidth from "../util/useMaxWidth";
 
 export default function SearchPagination({
   page,
   limit,
   total,
+  withControls = true,
 }: {
   page: number;
   limit: number;
   total: number;
+  withControls?: boolean;
 }) {
-  const [paginationTotal, setPaginationTotal] = useState(Math.min(10, total));
+  const [paginationTotal, setPaginationTotal] = useState(
+    Math.min(Math.max(page + 10 - (page % 10), 10), total)
+  );
   const [activePage, setActivePage] = useState(page);
   const [pageSize, setPageSize] = useState(limit);
 
-  useEffect(() => {
-    setPaginationTotal(Math.min(10, total));
-  }, [total]);
-
-  useEffect(() => {
-    setActivePage(Math.min(page, total));
-  }, [page]);
-
-  useEffect(() => {
-    setPageSize(limit);
-  }, [limit]);
-
   const navigate = useNavigate();
   const location = useLocation();
+
+  const isXs = useMaxWidth("xs");
 
   const createTo = (page: number | string, limit: number | string) => {
     return {
       pathname: `/${page}${limit !== 10 ? `/${limit}` : ""}`,
       search: location.search,
     };
+  };
+
+  const setPaginationProps = (page: number) => {
+    return {
+      component: Link,
+      to: createTo(page, pageSize),
+    };
+  };
+
+  const setPaginationControlProps = (control: "next" | "previous") => {
+    switch (control) {
+      case "next":
+        return {
+          ...setPaginationProps(activePage + 1),
+          ref: preventDefault(),
+        };
+      case "previous":
+        return {
+          ...setPaginationProps(activePage - 1),
+          ref: preventDefault(),
+        };
+      default:
+        return {};
+    }
+  };
+
+  const preventDefault = () => {
+    return useEventListener("click", function (e) {
+      if (this.hasAttribute("disabled")) {
+        e.preventDefault();
+      }
+    });
   };
 
   const onPageChange = (value: number) => {
@@ -60,60 +88,56 @@ export default function SearchPagination({
     navigate(createTo(newActivePage, newPageSize));
   };
 
-  const setPaginationProps = (page: number) => {
-    return {
-      component: Link,
-      to: createTo(page, pageSize),
-      state: { anotherPage: true },
-    };
-  };
+  useEffect(() => {
+    setPaginationTotal(Math.min(Math.max(page + 10 - (page % 10), 10), total));
+  }, [total]);
 
-  const preventDefault = () => {
-    return useEventListener("click", function (e) {
-      if (this.hasAttribute("disabled")) {
-        e.preventDefault();
-      }
-    });
-  };
+  useEffect(() => {
+    setActivePage(Math.min(page, total));
+  }, [page]);
+
+  useEffect(() => {
+    setPageSize(limit);
+  }, [limit]);
+
+  useEffect(() => {
+    if (activePage > paginationTotal) {
+      setPaginationTotal(Math.min(activePage + 10, total));
+    }
+  }, [activePage]);
 
   return (
-    <Group justify="space-between">
+    <Flex
+      align="center"
+      direction={{ base: "column", md: "row" }}
+      gap="md"
+      justify="space-between"
+    >
       <Pagination
-        getControlProps={(control) => {
-          switch (control) {
-            case "first":
-              return { ...setPaginationProps(1), ref: preventDefault() };
-            case "last":
-              return setPaginationProps(paginationTotal);
-            case "next":
-              return setPaginationProps(activePage + 1);
-            case "previous":
-              return {
-                ...setPaginationProps(activePage - 1),
-                ref: preventDefault(),
-              };
-            default:
-              return {};
-          }
-        }}
-        getItemProps={(page) => setPaginationProps(page)}
+        getControlProps={setPaginationControlProps}
+        getItemProps={setPaginationProps}
         onChange={onPageChange}
         radius="md"
-        siblings={2}
+        siblings={1}
+        size={isXs ? "xs" : "lg"}
         total={paginationTotal}
         value={activePage}
-        withEdges={paginationTotal > 5}
-        withControls={paginationTotal > 5}
       />
-      <Select
-        checkIconPosition="right"
-        data={["10", "20", "50"]}
-        defaultValue={`${pageSize}`}
-        inputWrapperOrder={["input", "label"]}
-        label="результатов на стр."
-        onChange={onPageSizeChange}
-        w={`${"результатов на стр.".length}ch`}
-      />
-    </Group>
+      {withControls && (
+        <Select
+          classNames={{
+            root: selectClasses.root,
+            input: selectClasses.input,
+          }}
+          checkIconPosition="right"
+          data={["10", "20", "50"]}
+          defaultValue={`${pageSize}`}
+          allowDeselect={false}
+          inputWrapperOrder={["input", "label"]}
+          label="результатов на стр."
+          onChange={onPageSizeChange}
+        />
+      )}
+    </Flex>
   );
 }

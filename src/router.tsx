@@ -1,27 +1,34 @@
-import { createBrowserRouter } from "react-router-dom";
-import Root from "./routes/Root";
-import Movie, { loader as movieLoader } from "./routes/Movie";
-import Search, { loader as searchLoader } from "./routes/Search";
+import { Outlet, createBrowserRouter } from "react-router-dom";
+import App from "./App";
+import MoviePage from "./routes/MoviePage";
+import movieLoader from "./loaders/movieLoader";
+import SearchPage from "./routes/SearchPage";
+import searchLoader from "./loaders/searchLoader";
 
 export default createBrowserRouter([
   {
     path: "/",
-    element: <Root />,
+    element: <App />,
     children: [
       {
-        index: true,
-        element: <Search />,
-        loader: searchLoader,
-      },
-      {
-        path: ":page/:limit?",
-        element: <Search />,
-        loader: searchLoader,
-      },
-      {
-        path: "movie/:id",
-        element: <Movie />,
-        loader: movieLoader,
+        errorElement: <Outlet />,
+        children: [
+          {
+            index: true,
+            element: <SearchPage />,
+            loader: searchLoader,
+          },
+          {
+            path: ":page/:limit?",
+            element: <SearchPage />,
+            loader: searchLoader,
+          },
+          {
+            path: "movie/:id",
+            element: <MoviePage />,
+            loader: movieLoader,
+          },
+        ],
       },
     ],
   },

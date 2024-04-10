@@ -31,6 +31,7 @@ export default async function customFetch<T>(path: string): Promise<{
     data = await response.json();
   } catch (e) {
     console.error(e);
+    throw e;
   }
 
   return { data, controller };
