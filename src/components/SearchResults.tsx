@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { useAsyncValue } from "react-router-dom";
-import { Stack } from "@mantine/core";
-import type { SearchLoaderData } from "../types/loaderTypes";
-import SearchPagination from "./SearchPagination";
+import { Card, Stack, Title } from "@mantine/core";
 import MovieCard from "./MovieCard";
+import SearchPagination from "./SearchPagination";
+import type { SearchLoaderData } from "../types/loaderTypes";
 
 export default function SearchResults() {
   const data = useAsyncValue() as SearchLoaderData;
@@ -16,7 +16,12 @@ export default function SearchResults() {
 
   return (
     <Stack>
-      {data.docs.map((movie, i) => (
+      {!data.docs?.length && (
+        <Card>
+          <Title ta="center">Ничего не найдено :(</Title>
+        </Card>
+      )}
+      {data.docs?.map((movie, i) => (
         <MovieCard key={i} movie={movie} />
       ))}
       {data.pages > 1 && (

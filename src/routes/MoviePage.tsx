@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import { useLoaderData, Await } from "react-router-dom";
-import type { Deferred, MovieLoaderData } from "../types/loaderTypes";
 import Movie from "../components/Movie";
 import LoadingSpinner from "../components/LoadingSpinner";
 import AsyncErrorElement from "../components/AsyncErrorElement";
+import type { Deferred, MovieLoaderData } from "../types/loaderTypes";
 
 export default function MoviePage() {
   const { data } = useLoaderData() as Deferred<MovieLoaderData>;

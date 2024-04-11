@@ -23,7 +23,7 @@ module.exports = {
         use: ["style-loader", "css-loader", "postcss-loader"],
       },
       {
-        test: /\.(png|svg|jpg|jpeg|gif)$/i,
+        test: /\.(png|svg|jpg|jpeg|gif|ico)$/i,
         type: "asset/resource",
       },
     ],
@@ -31,9 +31,14 @@ module.exports = {
   output: {
     filename: "bundle.js",
     path: path.resolve(__dirname, "dist"),
+    publicPath: ""
   },
   plugins: [
-    new HtmlWebpackPlugin({ template: "./src/index.html", inject: false }),
+    new HtmlWebpackPlugin({
+      template: "./src/index.html",
+      inject: false,
+      favicon: "./src/images/favicon.ico",
+    }),
     new webpack.EnvironmentPlugin(["TOKEN"]),
   ],
   resolve: {

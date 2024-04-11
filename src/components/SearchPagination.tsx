@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Flex, Pagination, Select } from "@mantine/core";
 import { useEventListener } from "@mantine/hooks";
-import * as selectClasses from "../styles/SearchPagination/Select.module.css";
 import useMaxWidth from "../util/useMaxWidth";
+import * as selectClasses from "../styles/SearchPagination/Select.module.css";
 
 export default function SearchPagination({
   page,

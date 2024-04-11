@@ -1,9 +1,12 @@
-import { Outlet, createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import App from "./App";
-import MoviePage from "./routes/MoviePage";
-import movieLoader from "./loaders/movieLoader";
 import SearchPage from "./routes/SearchPage";
+import MoviePage from "./routes/MoviePage";
 import searchLoader from "./loaders/searchLoader";
+import movieLoader from "./loaders/movieLoader";
+import AsyncErrorElement from "./components/AsyncErrorElement";
+import type { IdResponse } from "./types/idResponseType";
+import type { Deferred } from "./types/loaderTypes";
 
 export default createBrowserRouter([
   {
@@ -11,7 +14,7 @@ export default createBrowserRouter([
     element: <App />,
     children: [
       {
-        errorElement: <Outlet />,
+        errorElement: <AsyncErrorElement />,
         children: [
           {
             index: true,
@@ -27,6 +30,16 @@ export default createBrowserRouter([
             path: "movie/:id",
             element: <MoviePage />,
             loader: movieLoader,
+            handle: {
+              title: async (deferred: Deferred<IdResponse>) => {
+                const movie = await deferred.data;
+                return (
+                  movie.name ||
+                  movie.names?.filter((n) => n.language === "RU")[0]?.name ||
+                  movie.enName
+                );
+              },
+            },
           },
         ],
       },

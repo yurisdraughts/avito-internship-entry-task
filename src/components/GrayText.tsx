@@ -1,6 +1,6 @@
 import { Text, useMantineTheme } from "@mantine/core";
+import type { PropsWithChildren } from "react";
 import type { TextProps } from "@mantine/core";
-import { PropsWithChildren } from "react";
 
 export default function GrayText({
   children,

@@ -1,6 +1,6 @@
 import { Title, useMantineTheme } from "@mantine/core";
+import type { PropsWithChildren } from "react";
 import type { TitleProps } from "@mantine/core";
-import { PropsWithChildren } from "react";
 
 export default function GrayTitle({
   children,

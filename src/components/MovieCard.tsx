@@ -9,10 +9,11 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import stubImage from "../images/stub.png";
-import { SearchResponseItem } from "../types/searchResponseType";
-import useMaxWidth from "../util/useMaxWidth";
 import GrayTitle from "./GrayTitle";
+import useMaxWidth from "../util/useMaxWidth";
+import getMovieName from "../util/getMovieName";
+import type { SearchResponseItem } from "../types/searchResponseType";
+import stubImage from "../images/stub.png";
 
 export default function MovieCard({ movie }: { movie: SearchResponseItem }) {
   const location = useLocation();
@@ -36,15 +37,13 @@ export default function MovieCard({ movie }: { movie: SearchResponseItem }) {
         <Card.Section>
           <Grid columns={6} align="center">
             <Grid.Col span={isXs ? 6 : isSm ? 3 : 2}>
-              <Image src={movie.poster?.previewUrl} fallbackSrc={stubImage} />
+              <Image
+                src={movie.poster?.previewUrl}
+                fallbackSrc={"/" + stubImage}
+              />
             </Grid.Col>
             <Grid.Col span={isXs ? 6 : isSm ? 3 : 4} p="md">
-              <Title order={2}>
-                {movie.name ||
-                  movie.names.filter((nameObj) => nameObj.language === "RU")[0]
-                    ?.name ||
-                  movie.enName}
-              </Title>
+              <Title order={2}>{getMovieName(movie)}</Title>
               {movie.year && (
                 <Group align="center">
                   <GrayTitle order={3}>Год</GrayTitle>

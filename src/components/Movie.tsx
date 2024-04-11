@@ -8,18 +8,20 @@ import {
   Image,
   Rating,
   Stack,
-  Table,
   Text,
   Title,
   useMantineTheme,
 } from "@mantine/core";
-import type { MovieLoaderData } from "../types/loaderTypes";
+import GrayTitle from "./GrayTitle";
+import GrayText from "./GrayText";
+import MovieActors from "./MovieActors";
+import SeasonsInfo from "./SeasonsInfo";
 import MovieReviews from "./MovieReviews";
 import MoviePosters from "./MoviePosters";
-import MovieActors from "./MovieActors";
 import SimilarMovies from "./SimilarMovies";
 import useMaxWidth from "../util/useMaxWidth";
-import GrayTitle from "./GrayTitle";
+import getMovieName from "../util/getMovieName";
+import type { MovieLoaderData } from "../types/loaderTypes";
 
 export default function Movie() {
   const movie = useAsyncValue() as MovieLoaderData;
@@ -40,28 +42,29 @@ export default function Movie() {
         <Grid columns={isSm ? 1 : 2} align="start">
           <Grid.Col span={1}>
             {movie.poster && movie.poster.url && (
-              <Image w="100%" radius="md" src={movie.poster.url} />
+              <Image
+                w="100%"
+                radius="md"
+                src={movie.poster.url}
+                key={movie.poster.url}
+              />
             )}
           </Grid.Col>
           <Grid.Col span={1}>
             <Stack>
-              <Title order={1}>
-                {movie.name ||
-                  movie.names?.filter((n) => n.language === "RU")[0]?.name ||
-                  movie.enName}
-              </Title>
-              {movie.description && (
-                <Stack>
-                  <GrayTitle order={2}>Описание</GrayTitle>
+              <Title order={1}>{getMovieName(movie)}</Title>
+              <Stack>
+                <GrayTitle order={2}>Описание</GrayTitle>
+                {movie.description && (
                   <Text
                     dangerouslySetInnerHTML={{ __html: movie.description }}
                   ></Text>
-                </Stack>
-              )}
-              {!movie.description && <Text>Описание отсутствует.</Text>}
-              {movie.rating && !!movie.rating.kp && (
-                <Stack>
-                  <GrayTitle order={2}>Рейтинг</GrayTitle>
+                )}
+              </Stack>
+              {!movie.description && <GrayText>Описание отсутствует.</GrayText>}
+              <Stack>
+                <GrayTitle order={2}>Рейтинг</GrayTitle>
+                {movie.rating && !!movie.rating.kp && (
                   <Group>
                     <Rating
                       color={theme.primaryColor}
@@ -72,34 +75,16 @@ export default function Movie() {
                     />
                     <Text>{movie.rating.kp.toFixed(2)}</Text>
                   </Group>
-                </Stack>
-              )}
+                )}
+              </Stack>
               {(!movie.rating || !movie.rating.kp) && (
-                <Text>Нет информации о рейтинге.</Text>
+                <GrayText>Нет информации о рейтинге.</GrayText>
               )}
             </Stack>
           </Grid.Col>
         </Grid>
-        {movie.seasonsInfo && !!movie.seasonsInfo?.length && (
-          <>
-            <GrayTitle order={2}>Информация о сезонах</GrayTitle>
-            <Table striped withColumnBorders withRowBorders={false}>
-              <Table.Thead></Table.Thead>
-              <Table.Tr>
-                <Table.Th>Сезон</Table.Th>
-                <Table.Th>Число эпизодов</Table.Th>
-              </Table.Tr>
-              <Table.Tbody>
-                {movie.seasonsInfo.map((s) => (
-                  <Table.Tr key={s.number}>
-                    <Table.Td>{++s.number}</Table.Td>
-                    <Table.Td>{s.episodesCount}</Table.Td>
-                  </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
-          </>
-        )}
+        <GrayTitle order={2}>Сезоны</GrayTitle>
+        <SeasonsInfo id={movie.id} />
         <GrayTitle order={2}>В ролях</GrayTitle>
         <MovieActors
           actors={
@@ -110,7 +95,7 @@ export default function Movie() {
         <MovieReviews id={movie.id} />
         <GrayTitle order={2}>Постеры</GrayTitle>
         <Card.Section>
-          <MoviePosters id={movie.id} page={1} />
+          <MoviePosters id={movie.id} />
         </Card.Section>
         <GrayTitle order={2}>Рекомендации</GrayTitle>
         <Card.Section>

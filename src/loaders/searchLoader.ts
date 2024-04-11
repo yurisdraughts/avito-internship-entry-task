@@ -1,5 +1,5 @@
-import fetchWithController from "../util/fetchWithController";
 import { defer, type Params } from "react-router-dom";
+import fetchWithController from "../util/fetchWithController";
 import type { SearchLoaderData } from "../types/loaderTypes";
 
 export default async function deferredSearchLoader({

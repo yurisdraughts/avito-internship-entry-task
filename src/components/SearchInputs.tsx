@@ -1,35 +1,15 @@
-import { ChangeEvent, useEffect, useReducer } from "react";
-import {
-  useLocation,
-  useNavigate,
-  useNavigation,
-  useSearchParams,
-} from "react-router-dom";
-import {
-  Collapse,
-  Grid,
-  NumberInput,
-  SegmentedControl,
-  Select,
-  Stack,
-  TextInput,
-  useMantineTheme,
-} from "@mantine/core";
+import { useEffect, useReducer } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Collapse, Grid, Stack } from "@mantine/core";
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
-import * as segmentedControlClasses from "../styles/SearchInputs/SegmentedControl.module.css";
-import useMaxWidth from "../util/useMaxWidth";
 
-type SearchInput = string;
-function isSearch(value: unknown): value is SearchInput {
-  return typeof value === "string";
-}
-
-type FiltersInput = { year?: string; country?: string; ageRating?: string };
-function isFilters(value: unknown): value is FiltersInput {
-  return typeof value === "object" && value !== null;
-}
-
-type SearchState = null | SearchInput | FiltersInput;
+import SegmentedInputControl from "./SegmentedInputControl";
+import YearInput from "./YearInput";
+import CountryAutocomplete from "./CountryAutocomplete";
+import AgeRatingSelect from "./AgeRatingSelect";
+import MovieNameAutocomplete from "./MovieNameAutocomplete";
+import { isSearch, isFilters } from "../util/inputTypeGuards";
+import type { SearchState } from "../types/inputTypes";
 
 const reducer = (state: SearchState, action: SearchState) => {
   if (
@@ -54,92 +34,26 @@ export default function SearchInputs() {
   const filters =
     year || country || ageRating ? { year, country, ageRating } : null;
 
-  const [state, dispatch] = useReducer(reducer, filters ? filters : search);
-  const [debounced] = useDebouncedValue(state, 1000);
+  const [searchState, dispatchSearchState] = useReducer(
+    reducer,
+    filters ? filters : search
+  );
+  const [debouncedSearchState] = useDebouncedValue(searchState, 1000);
 
   const [searchOpened, { toggle: toggleSearch }] = useDisclosure(
-    isSearch(state)
+    isSearch(searchState)
   );
   const [filtersOpened, { toggle: toggleFilters }] = useDisclosure(
-    isFilters(state)
+    isFilters(searchState)
   );
 
-  const theme = useMantineTheme();
-  const isXs = useMaxWidth("xs");
-
-  const onSegmentChange = (value: string) => {
-    switch (value) {
-      case "search": {
-        if (filtersOpened) {
-          toggleFilters();
-        }
-
-        const timeoutID = setTimeout(() => {
-          if (!searchOpened) {
-            toggleSearch();
-
-            dispatch("");
-          }
-          clearTimeout(timeoutID);
-        }, 200);
-
-        break;
-      }
-      case "filters": {
-        if (searchOpened) {
-          toggleSearch();
-        }
-
-        const timeoutID = setTimeout(() => {
-          if (!filtersOpened) {
-            toggleFilters();
-
-            dispatch({});
-          }
-          clearTimeout(timeoutID);
-        }, 200);
-
-        break;
-      }
-      case "all":
-        if (searchOpened) {
-          toggleSearch();
-        }
-
-        if (filtersOpened) {
-          toggleFilters();
-        }
-
-        dispatch(null);
-      default:
-        break;
-    }
-  };
-
-  const onNameInput = (e: ChangeEvent<HTMLInputElement>) => {
-    dispatch(e.target.value);
-  };
-
-  const onCountryInput = (e: ChangeEvent<HTMLInputElement>) => {
-    dispatch({ country: e.target.value });
-  };
-
-  const onYearInput = (value: number | string) => {
-    dispatch({ year: String(value) });
-  };
-
-  const onAgeRatingSelect = (value: string | null) => {
-    const number = parseInt(value);
-    dispatch({ ageRating: isNaN(number) ? "" : String(number) });
-  };
-
   useEffect(() => {
-    if (isSearch(debounced) && debounced !== "") {
-      setSearchParams({ n: debounced });
-    } else if (isFilters(debounced)) {
+    if (isSearch(debouncedSearchState) && debouncedSearchState !== "") {
+      setSearchParams({ n: debouncedSearchState + ":(" });
+    } else if (isFilters(debouncedSearchState)) {
       setSearchParams(
         Object.fromEntries(
-          Object.entries(debounced)
+          Object.entries(debouncedSearchState)
             .filter(([_, v]) => Boolean(v))
             .map(([k, v]) => [k[0], v])
         )
@@ -147,69 +61,42 @@ export default function SearchInputs() {
     } else {
       setSearchParams({});
     }
-  }, [debounced]);
+  }, [debouncedSearchState]);
 
   return (
     <Stack>
-      <SegmentedControl
-        color={theme.primaryColor}
-        size={isXs ? "xs" : "lg"}
-        classNames={{
-          root: segmentedControlClasses.root,
-        }}
-        data={[
-          { value: "all", label: "Все фильмы" },
-          { value: "filters", label: "Фильтры" },
-          { value: "search", label: "Поиск" },
-        ]}
-        onChange={onSegmentChange}
-        value={
-          isFilters(state) ? "filters" : isSearch(state) ? "search" : "all"
-        }
+      <SegmentedInputControl
+        searchState={searchState}
+        dispatchSearchState={dispatchSearchState}
+        searchOpened={searchOpened}
+        toggleSearch={toggleSearch}
+        filtersOpened={filtersOpened}
+        toggleFilters={toggleFilters}
       />
       <Collapse in={searchOpened}>
-        <TextInput
-          size="md"
-          label="Название"
-          onChange={onNameInput}
-          placeholder="Введите название"
-          value={isSearch(state) ? state : ""}
+        <MovieNameAutocomplete
+          searchState={searchState}
+          dispatchSearchState={dispatchSearchState}
         />
       </Collapse>
       <Collapse in={filtersOpened}>
         <Grid columns={6} grow>
           <Grid.Col span={{ base: 6, sm: 3, md: 2 }}>
-            <NumberInput
-              size="md"
-              allowDecimal={false}
-              hideControls
-              label="Год"
-              min={1874}
-              onChange={onYearInput}
-              placeholder="Введите год"
-              value={isFilters(state) && state.year ? state.year : ""}
+            <YearInput
+              searchState={searchState}
+              dispatchSearchState={dispatchSearchState}
             />
           </Grid.Col>
           <Grid.Col span={{ base: 6, sm: 3, md: 2 }}>
-            <TextInput
-              size="md"
-              label="Страна"
-              onChange={onCountryInput}
-              placeholder="Введите страну"
-              value={isFilters(state) && state.country ? state.country : ""}
+            <CountryAutocomplete
+              searchState={searchState}
+              dispatchSearchState={dispatchSearchState}
             />
           </Grid.Col>
           <Grid.Col span={{ base: 6, md: 2 }}>
-            <Select
-              size="md"
-              clearable
-              data={["0", "6", "12", "16", "18"].map((v) => v + "+")}
-              label="Возрастной рейтинг"
-              onChange={onAgeRatingSelect}
-              placeholder="Выберите возрастной рейтинг"
-              value={
-                isFilters(state) && state.ageRating ? state.ageRating + "+" : ""
-              }
+            <AgeRatingSelect
+              searchState={searchState}
+              dispatchSearchState={dispatchSearchState}
             />
           </Grid.Col>
         </Grid>

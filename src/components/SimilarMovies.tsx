@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
-import { Carousel } from "@mantine/carousel";
 import { Image, Text, useMantineTheme } from "@mantine/core";
+import { Carousel } from "@mantine/carousel";
+import GrayText from "./GrayText";
+import useMaxWidth from "../util/useMaxWidth";
 import type { SimilarMovies } from "../types/idResponseType";
 import * as controlClass from "../styles/Carousel/Control.module.css";
-import useMaxWidth from "../util/useMaxWidth";
-import GrayText from "./GrayText";
 
 export default function SimilarMovies({ movies }: { movies: SimilarMovies }) {
   const theme = useMantineTheme();

@@ -1,46 +1,49 @@
 import { useEffect, useState } from "react";
-import { Image, Skeleton, Text, useMantineTheme } from "@mantine/core";
+import { Image, Skeleton, useMantineTheme } from "@mantine/core";
 import { Carousel } from "@mantine/carousel";
+import GrayText from "./GrayText";
+import ErrorElement from "./ErrorElement";
 import fetchWithController from "../util/fetchWithController";
+import useMaxWidth from "../util/useMaxWidth";
 import type { ImageResponse } from "../types/imageResponseType";
 import * as controlClass from "../styles/Carousel/Control.module.css";
-import useMaxWidth from "../util/useMaxWidth";
-import GrayText from "./GrayText";
 
-export default function MoviePosters({
-  id,
-  page,
-}: {
-  id: number;
-  page: number;
-}) {
+export default function MoviePosters({ id }: { id: number }) {
   const [data, setData] = useState<ImageResponse>(null);
   const [controller, setController] = useState<AbortController>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error>(null);
 
   const theme = useMantineTheme();
   const [isMd, isSm] = useMaxWidth(["md", "sm"]);
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
 
     (async () => {
-      const { data, controller } = await fetchWithController<ImageResponse>(
-        `image?page=${page}&limit=250&movieId=${id}&type=cover`
-      );
+      try {
+        const { data, controller } = await fetchWithController<ImageResponse>(
+          `image?page=1&limit=250&movieId=${id}&type=cover`
+        );
 
-      setLoading(false);
-      setData(data);
-      setController(controller);
+        setLoading(false);
+        setData(data);
+        setController(controller);
+      } catch (e) {
+        console.error(e);
+        setError(e);
+      }
     })();
 
     return () => {
       controller?.abort();
     };
-  }, [page]);
+  }, [id]);
 
   return (
     <Skeleton visible={!data || loading}>
+      {error && <ErrorElement error={error} />}
       {data?.docs && !data.docs.length && (
         <GrayText ml={theme.spacing.md}>Постеров нет.</GrayText>
       )}
@@ -54,9 +57,9 @@ export default function MoviePosters({
           p="md"
           classNames={controlClass}
         >
-          {data.docs.map((poster, i) => {
+          {data.docs.map((poster) => {
             return (
-              <Carousel.Slide key={i}>
+              <Carousel.Slide key={poster.previewUrl}>
                 <Image h={500} fit="contain" src={poster.previewUrl} />
               </Carousel.Slide>
             );
