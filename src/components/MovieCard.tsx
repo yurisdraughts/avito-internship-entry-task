@@ -50,7 +50,7 @@ export default function MovieCard({ movie }: { movie: SearchResponseItem }) {
                   <Text>{movie.year}</Text>
                 </Group>
               )}
-              {movie.countries && movie.countries.length && (
+              {movie.countries.length !== 0 && (
                 <Group align="center">
                   <GrayTitle order={3}>Страна</GrayTitle>
                   <Text>

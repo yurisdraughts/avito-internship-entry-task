@@ -14,12 +14,13 @@ import GrayText from "./GrayText";
 import ErrorElement from "./ErrorElement";
 import fetchWithController from "../util/fetchWithController";
 import useMaxWidth from "../util/useMaxWidth";
-import type { SeasonInfo, SeasonsInfo } from "../types/seasonsInfoType";
+import type { SeasonsInfo } from "../types/seasonsInfoType";
 import stubImage from "../images/stub.png";
 import stubImageHorizontal from "../images/stub_horizontal.png";
+import { isSeasonsInfoType } from "../util/loaderTypeGuards";
 
 export default function SeasonsInfo({ id }: { id: number }) {
-  const [seasons, setSeasons] = useState<any>();
+  const [seasons, setSeasons] = useState<SeasonsInfo>(null);
   const [controller, setController] = useState<AbortController>(null);
   const [loading, setLoading] = useState(false);
   const [activePage, setActivePage] = useState(1);
@@ -42,7 +43,7 @@ export default function SeasonsInfo({ id }: { id: number }) {
     (async () => {
       try {
         const { data, controller } = await fetchWithController<SeasonsInfo>(
-          `season?page=1&limit=250&sortField=airDate&sortType=1&movieId=${id}`
+          `season?page=1&limit=250&sortField=airDate&sortType=1&movieId=${id}&selectFields=number&selectFields=episodes&selectFields=poster`
         );
 
         const seasons = data.docs
@@ -68,24 +69,22 @@ export default function SeasonsInfo({ id }: { id: number }) {
     <Box pos="relative">
       <LoadingOverlay visible={!seasons || loading} />
       {error && <ErrorElement error={error} />}
-      <Stack>
-        {seasons?.docs && !seasons.docs.length && (
-          <GrayText>Нет информации о сезонах.</GrayText>
-        )}
-        {seasons?.docs &&
-          !!seasons.docs.length &&
-          seasons.docs
-            .slice(activePage - 1, activePage)
-            .map((season: SeasonInfo) => (
+      {isSeasonsInfoType(seasons) && (
+        <Stack>
+          {seasons.docs.length === 0 && (
+            <GrayText>Нет информации о сезонах.</GrayText>
+          )}
+          {seasons.docs.length !== 0 &&
+            seasons.docs.slice(activePage - 1, activePage).map((season) => (
               <Stack key={season.number} align="center">
                 <Image
-                  src={season.poster?.previewUrl ?? "/" + stubImage}
+                  src={season.poster.previewUrl ?? "/" + stubImage}
                   w="min(100%, 400px)"
                   h="auto"
                   radius="md"
                 />
                 <Grid columns={isXs ? 1 : isSm ? 2 : 3}>
-                  {season.episodes?.map((episode) => (
+                  {season.episodes.map((episode) => (
                     <Grid.Col span={1} key={episode.name}>
                       <Stack h="100%" justify="space-between">
                         <Title order={3}>
@@ -106,9 +105,7 @@ export default function SeasonsInfo({ id }: { id: number }) {
                 </Grid>
               </Stack>
             ))}
-        {seasons?.docs &&
-          seasons.docs.length !== 0 &&
-          seasons.docs.length !== 1 && (
+          {seasons.docs.length !== 0 && seasons.docs.length !== 1 && (
             <Center>
               <Pagination
                 radius="md"
@@ -119,7 +116,8 @@ export default function SeasonsInfo({ id }: { id: number }) {
               />
             </Center>
           )}
-      </Stack>
+        </Stack>
+      )}
     </Box>
   );
 }

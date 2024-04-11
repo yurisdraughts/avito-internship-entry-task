@@ -8,7 +8,7 @@ import YearInput from "./YearInput";
 import CountryAutocomplete from "./CountryAutocomplete";
 import AgeRatingSelect from "./AgeRatingSelect";
 import MovieNameAutocomplete from "./MovieNameAutocomplete";
-import { isSearch, isFilters } from "../util/inputTypeGuards";
+import { isNameQuery, isFilters } from "../util/inputTypeGuards";
 import type { SearchState } from "../types/inputTypes";
 
 const reducer = (state: SearchState, action: SearchState) => {
@@ -41,15 +41,15 @@ export default function SearchInputs() {
   const [debouncedSearchState] = useDebouncedValue(searchState, 1000);
 
   const [searchOpened, { toggle: toggleSearch }] = useDisclosure(
-    isSearch(searchState)
+    isNameQuery(searchState)
   );
   const [filtersOpened, { toggle: toggleFilters }] = useDisclosure(
     isFilters(searchState)
   );
 
   useEffect(() => {
-    if (isSearch(debouncedSearchState) && debouncedSearchState !== "") {
-      setSearchParams({ n: debouncedSearchState + ":(" });
+    if (isNameQuery(debouncedSearchState) && debouncedSearchState !== "") {
+      setSearchParams({ n: debouncedSearchState });
     } else if (isFilters(debouncedSearchState)) {
       setSearchParams(
         Object.fromEntries(

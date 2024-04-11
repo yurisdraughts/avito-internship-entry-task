@@ -1,18 +1,17 @@
 import type { IdResponse } from "./idResponseType";
 import type { SearchResponse } from "./searchResponseType";
+import type { NameQueryInput, FiltersInput } from "./inputTypes";
 
-type WithControllers<T> = T & { controllers: AbortController[] };
+type Controllers = { controllers: AbortController[] };
 
-type SearchByName<T> = T & { search: string };
+type Query = { search?: NameQueryInput };
 
-type SearchWithFilters<T> = T & {
-  filters: { year: string; country: string; ageRating: string };
-};
+type Filters = { filters?: FiltersInput };
 
-export type SearchLoaderData = WithControllers<
-  Partial<SearchWithFilters<SearchByName<SearchResponse>>>
->;
+export type SearchLoaderData =
+  | (Controllers & Query & Filters)
+  | (SearchResponse & Controllers & Query & Filters);
 
-export type MovieLoaderData = WithControllers<Partial<IdResponse>>;
+export type MovieLoaderData = Controllers | (IdResponse & Controllers);
 
 export type Deferred<T> = { data: Promise<T> };

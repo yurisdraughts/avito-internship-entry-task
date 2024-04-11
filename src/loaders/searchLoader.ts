@@ -36,6 +36,10 @@ export default async function deferredSearchLoader({
   });
 }
 
+const SELECT_FIELDS =
+  `&selectFields=id&selectFields=name&selectFields=enName&selectFields=names
+&selectFields=year&selectFields=poster&selectFields=countries&selectFields=ageRating`;
+
 async function searchLoader({
   page,
   limit,
@@ -61,7 +65,7 @@ async function searchLoader({
     const ageRatingComponent = ageRating ? `&ageRating=${ageRating}` : "";
 
     ({ data, controller } = await fetchWithController<SearchLoaderData>(
-      `movie?page=${page}&limit=${limit}${yearComponent}${ageRatingComponent}${countryComponent}`
+      `movie?page=${page}&limit=${limit}${yearComponent}${ageRatingComponent}${countryComponent}${SELECT_FIELDS}`
     ));
   } else if (name) {
     ({ data, controller } = await fetchWithController<SearchLoaderData>(
@@ -69,7 +73,7 @@ async function searchLoader({
     ));
   } else {
     ({ data, controller } = await fetchWithController<SearchLoaderData>(
-      `movie?page=${page}&limit=${limit}`
+      `movie?page=${page}&limit=${limit}${SELECT_FIELDS}`
     ));
   }
 

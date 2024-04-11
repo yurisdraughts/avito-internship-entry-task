@@ -2,7 +2,6 @@ export type SimilarMovies = {
   id: number | null;
   name: string;
   poster: {
-    url: string | null;
     previewUrl: string | null;
   };
 }[];
@@ -24,15 +23,11 @@ export type IdResponse = {
   }[];
   description?: string | null;
   rating?: {
-    kp: number | null;
+    kp?: number | null;
   };
   poster?: {
-    url: string | null;
+    url?: string | null;
   };
   persons?: Persons;
-  seasonsInfo?: {
-    number?: number | null;
-    episodesCount?: number | null;
-  }[];
   similarMovies?: SimilarMovies;
 };

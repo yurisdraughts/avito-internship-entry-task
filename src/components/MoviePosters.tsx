@@ -7,6 +7,7 @@ import fetchWithController from "../util/fetchWithController";
 import useMaxWidth from "../util/useMaxWidth";
 import type { ImageResponse } from "../types/imageResponseType";
 import * as controlClass from "../styles/Carousel/Control.module.css";
+import { isImageResponse } from "../util/loaderTypeGuards";
 
 export default function MoviePosters({ id }: { id: number }) {
   const [data, setData] = useState<ImageResponse>(null);
@@ -24,7 +25,7 @@ export default function MoviePosters({ id }: { id: number }) {
     (async () => {
       try {
         const { data, controller } = await fetchWithController<ImageResponse>(
-          `image?page=1&limit=250&movieId=${id}&type=cover`
+          `image?page=1&limit=250&movieId=${id}&selectFields=previewUrl&type=cover`
         );
 
         setLoading(false);
@@ -44,27 +45,31 @@ export default function MoviePosters({ id }: { id: number }) {
   return (
     <Skeleton visible={!data || loading}>
       {error && <ErrorElement error={error} />}
-      {data?.docs && !data.docs.length && (
-        <GrayText ml={theme.spacing.md}>Постеров нет.</GrayText>
-      )}
-      {data?.docs && !!data.docs.length && (
-        <Carousel
-          align="start"
-          bg={theme.colors.gray[4]}
-          slideSize={isSm ? "100%" : isMd ? "50%" : "33.3333%"}
-          slidesToScroll={isSm ? 1 : isMd ? 2 : 3}
-          slideGap="md"
-          p="md"
-          classNames={controlClass}
-        >
-          {data.docs.map((poster) => {
-            return (
-              <Carousel.Slide key={poster.previewUrl}>
-                <Image h={500} fit="contain" src={poster.previewUrl} />
-              </Carousel.Slide>
-            );
-          })}
-        </Carousel>
+      {isImageResponse(data) && (
+        <>
+          {data.docs.length === 0 && (
+            <GrayText ml={theme.spacing.md}>Постеров нет.</GrayText>
+          )}
+          {data.docs.length !== 0 && (
+            <Carousel
+              align="start"
+              bg={theme.colors.gray[4]}
+              slideSize={isSm ? "100%" : isMd ? "50%" : "33.3333%"}
+              slidesToScroll={isSm ? 1 : isMd ? 2 : 3}
+              slideGap="md"
+              p="md"
+              classNames={controlClass}
+            >
+              {data.docs.map((poster) => {
+                return (
+                  <Carousel.Slide key={poster.previewUrl}>
+                    <Image h={500} fit="contain" src={poster.previewUrl} />
+                  </Carousel.Slide>
+                );
+              })}
+            </Carousel>
+          )}
+        </>
       )}
     </Skeleton>
   );

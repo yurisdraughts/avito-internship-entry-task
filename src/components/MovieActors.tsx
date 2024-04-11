@@ -23,11 +23,11 @@ export default function MovieActors({ actors }: { actors: Persons }) {
           <Grid columns={60} align="stretch">
             {actors
               .slice((activePage - 1) * LIMIT, activePage * LIMIT)
-              .map((actor, id) => {
+              .map((actor, i) => {
                 return (
                   <Grid.Col
                     span={{ base: 30, xs: 20, sm: 15, md: 12, lg: 10 }}
-                    key={actor.name ?? id}
+                    key={actor.description + i}
                   >
                     <Stack h="100%" justify="space-between">
                       <Image

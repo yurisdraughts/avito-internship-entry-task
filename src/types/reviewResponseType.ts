@@ -7,6 +7,5 @@ export type ReviewResponse = {
     date: string;
   }[];
   total: number;
-  page: number;
   pages: number;
 };

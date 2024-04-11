@@ -1,6 +1,6 @@
-import type { FiltersInput, SearchInput } from "../types/inputTypes";
+import type { FiltersInput, NameQueryInput } from "../types/inputTypes";
 
-export function isSearch(value: unknown): value is SearchInput {
+export function isNameQuery(value: unknown): value is NameQueryInput {
   return typeof value === "string";
 }
 

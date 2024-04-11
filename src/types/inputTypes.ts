@@ -1,4 +1,4 @@
-export type SearchInput = string;
+export type NameQueryInput = string;
 
 export type FiltersInput = {
   year?: string;
@@ -6,4 +6,4 @@ export type FiltersInput = {
   ageRating?: string;
 };
 
-export type SearchState = null | SearchInput | FiltersInput;
+export type SearchState = null | NameQueryInput | FiltersInput;

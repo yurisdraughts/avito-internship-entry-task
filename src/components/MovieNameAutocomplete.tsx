@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Autocomplete } from "@mantine/core";
 import { useDebouncedState } from "@mantine/hooks";
-import { isSearch } from "../util/inputTypeGuards";
+import { isNameQuery } from "../util/inputTypeGuards";
 import type { SearchState } from "../types/inputTypes";
 
 const LOCAL_STORAGE_KEY = "kinopoisk-api-search";
@@ -52,7 +52,7 @@ export default function MovieNameAutocomplete({
       label="Название"
       onChange={onNameInput}
       placeholder="Введите название"
-      value={isSearch(searchState) ? searchState : ""}
+      value={isNameQuery(searchState) ? searchState : ""}
     />
   );
 }

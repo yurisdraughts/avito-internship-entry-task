@@ -1,6 +1,6 @@
 import { SegmentedControl, useMantineTheme } from "@mantine/core";
 import useMaxWidth from "../util/useMaxWidth";
-import { isFilters, isSearch } from "../util/inputTypeGuards";
+import { isFilters, isNameQuery } from "../util/inputTypeGuards";
 import type { SearchState } from "../types/inputTypes";
 import * as segmentedControlClasses from "../styles/SearchInputs/SegmentedControl.module.css";
 
@@ -86,7 +86,7 @@ export default function SegmentedInputControl({
       value={
         isFilters(searchState)
           ? "filters"
-          : isSearch(searchState)
+          : isNameQuery(searchState)
           ? "search"
           : "all"
       }
