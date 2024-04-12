@@ -12,9 +12,9 @@ export default function SearchPage() {
 
   return (
     <Stack>
-      <SearchInputs />
       <Suspense fallback={<LoadingSpinner />}>
         <Await resolve={data} errorElement={<AsyncErrorElement />}>
+          <SearchInputs />
           <SearchResults />
         </Await>
       </Suspense>
