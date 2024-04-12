@@ -24,14 +24,19 @@ module.exports = {
       },
       {
         test: /\.(png|svg|jpg|jpeg|gif|ico)$/i,
-        type: "asset/resource",
+        // type: "asset/resource",
+        loader: "file-loader",
+        options: {
+          name: "[name][hash].[ext]",
+          outputPath: "/",
+        },
       },
     ],
   },
   output: {
     filename: "bundle.js",
     path: path.resolve(__dirname, "dist"),
-    publicPath: ""
+    publicPath: "",
   },
   plugins: [
     new HtmlWebpackPlugin({

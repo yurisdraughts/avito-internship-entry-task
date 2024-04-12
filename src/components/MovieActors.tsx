@@ -32,7 +32,7 @@ export default function MovieActors({ actors }: { actors: Persons }) {
                     <Stack h="100%" justify="space-between">
                       <Image
                         src={actor.photo}
-                        fallbackSrc={"/" + stubImage}
+                        fallbackSrc={stubImage}
                         h={250}
                         radius="sm"
                       />

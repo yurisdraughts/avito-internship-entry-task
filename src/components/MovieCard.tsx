@@ -38,8 +38,9 @@ export default function MovieCard({ movie }: { movie: SearchResponseItem }) {
           <Grid columns={6} align="center">
             <Grid.Col span={isXs ? 6 : isSm ? 3 : 2}>
               <Image
+                style={{aspectRatio: "2 / 3"}}
                 src={movie.poster?.previewUrl}
-                fallbackSrc={"/" + stubImage}
+                fallbackSrc={stubImage}
               />
             </Grid.Col>
             <Grid.Col span={isXs ? 6 : isSm ? 3 : 4} p="md">

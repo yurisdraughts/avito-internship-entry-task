@@ -21,7 +21,7 @@ export default function Root() {
     <AppShell>
       <AppShell.Header pos="static" h={70} bg={theme.black}>
         <Link to="/">
-          <Image h="100%" w="auto" ml={theme.spacing.md} src={"/" + logo} />
+          <Image h="100%" w="auto" ml={theme.spacing.md} src={logo} />
         </Link>
       </AppShell.Header>
       <AppShell.Main className="main" py={20} bg={theme.colors.gray[2]}>

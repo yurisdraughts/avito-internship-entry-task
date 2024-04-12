@@ -78,7 +78,7 @@ export default function SeasonsInfo({ id }: { id: number }) {
             seasons.docs.slice(activePage - 1, activePage).map((season) => (
               <Stack key={season.number} align="center">
                 <Image
-                  src={season.poster.previewUrl ?? "/" + stubImage}
+                  src={season.poster.previewUrl ?? stubImage}
                   w="min(100%, 400px)"
                   h="auto"
                   radius="md"
@@ -95,7 +95,7 @@ export default function SeasonsInfo({ id }: { id: number }) {
                             h="100%"
                             src={
                               episode.still?.previewUrl ??
-                              "/" + stubImageHorizontal
+                              stubImageHorizontal
                             }
                           />
                         </Box>
