@@ -1,3 +1,19 @@
+# Практическое задание
+
+## Инструкция по запуску
+
+```bash
+TOKEN=<ваш токен> docker build --build-arg TOKEN -t my-app .
+docker run -p 7070:7070 -d my-app
+```
+
+Если всё-таки окажется, что я неправильно настроил Docker, то тогда
+
+```bash
+npm install
+TOKEN=<ваш токен> npm run start
+```
+
 ## Примеры запросов и ответов
 
 ### Запрос к `https://api.kinopoisk.dev/v1.4/movie/252089` (поиск фильма по `id`)
